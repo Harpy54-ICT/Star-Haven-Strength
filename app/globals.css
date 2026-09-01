@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --shs-dark: #0d1f12;
+  --shs-gold: #c9a84c;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background-color: var(--shs-dark);
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Soft pulsing glow behind/around the logo */
+@keyframes logoGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 12px rgba(201, 168, 76, 0.35))
+      drop-shadow(0 0 28px rgba(27, 67, 50, 0.25));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 26px rgba(201, 168, 76, 0.65))
+      drop-shadow(0 0 55px rgba(201, 168, 76, 0.3));
+    transform: scale(1.02);
+  }
+}
+
+.logo-glow {
+  animation: logoGlow 4s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+/* Gentle fade + rise for entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.delay-1 {
+  animation-delay: 0.3s;
+}
+.delay-2 {
+  animation-delay: 0.6s;
+}
+.delay-3 {
+  animation-delay: 0.9s;
+}
+.delay-4 {
+  animation-delay: 1.2s;
+}
+
+/* Shimmer sweep for the "Coming Soon" text */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    #c9a84c 0%,
+    #f4e5b0 25%,
+    #c9a84c 50%,
+    #f4e5b0 75%,
+    #c9a84c 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+  text-shadow: 0 0 30px rgba(201, 168, 76, 0.25);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo-glow,
+  .fade-in-up,
+  .shimmer-text {
+    animation: none;
+  }
+  .fade-in-up {
+    opacity: 1;
+  }
+}
