@@ -34,7 +34,7 @@ export default function Home() {
         </p>
 
         {/* Brand name */}
-        <h1 className="fade-in-up delay-3 mt-4 text-4xl font-extrabold uppercase tracking-wider text-shs-gold sm:text-5xl md:text-6xl">
+        <h1 className="fade-in-up delay-3 gold-outline mt-4 text-4xl font-extrabold uppercase tracking-wider text-white sm:text-5xl md:text-6xl">
           Star Haven Strength
         </h1>
 
