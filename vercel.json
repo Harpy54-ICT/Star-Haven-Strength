@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/newbie-pulse",
+      "schedule": "0 9 * * 1"
+    }
+  ]
+}

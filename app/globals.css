@@ -5,6 +5,19 @@
 :root {
   --shs-dark: #0d1f12;
   --shs-gold: #c9a84c;
+
+  /* Brand palette (design tokens) */
+  --color-green: #1b4332;
+  --color-green-light: #2d6a4f;
+  --color-green-dark: #0d2b1f;
+  --color-gold: #c9a84c;
+  --color-gold-light: #e8c97a;
+  --color-gold-dark: #a07832;
+  --color-charcoal: #1a1a1a;
+  --color-white: #ffffff;
+  --color-grey-light: #f9fafb;
+  --color-grey-mid: #e5e7eb;
+  --color-grey-dark: #4b5563;
 }
 
 html,
