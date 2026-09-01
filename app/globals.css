@@ -41,6 +41,20 @@ body {
   will-change: transform, filter;
 }
 
+/* Keep the logo crisp when scaled down by the browser */
+.logo-crisp {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+}
+
+/* Thin elegant gold outline for text that would otherwise blend
+   into the dark background (improves readability). */
+.gold-outline {
+  -webkit-text-stroke: 1px #c9a84c;
+  text-shadow: 0 0 8px rgba(201, 168, 76, 0.25);
+  paint-order: stroke fill;
+}
+
 /* Gentle fade + rise for entrance */
 @keyframes fadeInUp {
   from {

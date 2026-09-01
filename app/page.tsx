@@ -19,10 +19,12 @@ export default function Home() {
           <Image
             src="/logo.png"
             alt="Star Haven Strength logo"
-            width={400}
-            height={400}
+            width={1238}
+            height={1536}
+            quality={100}
             priority
-            className="logo-glow h-auto w-[280px] sm:w-[340px] md:w-[400px]"
+            sizes="(max-width: 640px) 300px, (max-width: 768px) 380px, 460px"
+            className="logo-glow logo-crisp h-auto w-[300px] sm:w-[380px] md:w-[460px]"
           />
         </div>
 
@@ -32,7 +34,7 @@ export default function Home() {
         </p>
 
         {/* Brand name */}
-        <h1 className="fade-in-up delay-3 mt-4 text-4xl font-extrabold uppercase tracking-wider text-white sm:text-5xl md:text-6xl">
+        <h1 className="fade-in-up delay-3 gold-outline mt-4 text-4xl font-extrabold uppercase tracking-wider text-white sm:text-5xl md:text-6xl">
           Star Haven Strength
         </h1>
 
