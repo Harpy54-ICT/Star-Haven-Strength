@@ -16,6 +16,7 @@ import {
   Bell,
   Gift,
   Settings,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -29,6 +30,11 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Program', href: '/dashboard/program', icon: ClipboardList },
+  {
+    label: 'New Member Program',
+    href: '/dashboard/newbie-program',
+    icon: Sparkles,
+  },
   { label: 'Log Workout', href: '/dashboard/log-workout', icon: Dumbbell },
   { label: 'Exercises', href: '/dashboard/exercises', icon: Library },
   { label: 'Progress', href: '/dashboard/progress', icon: TrendingUp },

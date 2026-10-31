@@ -1,6 +1,15 @@
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Users, CreditCard, ShieldCheck, UserPlus } from 'lucide-react'
+import {
+  Users,
+  CreditCard,
+  ShieldCheck,
+  UserPlus,
+  FileText,
+  Video,
+  Link2,
+  Wallet,
+} from 'lucide-react'
 import { requireAdmin } from '@/lib/auth/guards'
 import { db } from '@/lib/db/client'
 import { formatTierName } from '@/lib/stripe/billing'
@@ -14,6 +23,10 @@ const KPIS = [
   { key: 'active', label: 'Active Subscriptions', icon: CreditCard },
   { key: 'pending', label: 'Pending Verifications', icon: ShieldCheck },
   { key: 'newThisMonth', label: 'New This Month', icon: UserPlus },
+  { key: 'coachPosts', label: 'Published Posts', icon: FileText },
+  { key: 'videos', label: 'Video Library Items', icon: Video },
+  { key: 'affiliates', label: 'Active Affiliates', icon: Link2 },
+  { key: 'payouts', label: 'Pending Payouts', icon: Wallet },
 ] as const
 
 export default async function AdminOverview() {
@@ -21,14 +34,27 @@ export default async function AdminOverview() {
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86_400_000)
 
-  const [totalClients, activeSubs, pendingVerifs, newThisMonth, recentClients] =
-    await Promise.all([
+  const [
+    totalClients,
+    activeSubs,
+    pendingVerifs,
+    newThisMonth,
+    publishedPosts,
+    videoItems,
+    activeAffiliates,
+    pendingPayouts,
+    recentClients,
+  ] = await Promise.all([
       db.user.count({ where: { role: 'client' } }),
       db.subscription.count({ where: { status: 'active' } }),
       db.militaryVerification.count({ where: { status: 'pending' } }),
       db.user.count({
         where: { role: 'client', createdAt: { gte: thirtyDaysAgo } },
       }),
+      db.coachPost.count({ where: { status: 'published' } }),
+      db.videoLibraryItem.count(),
+      db.affiliatePartner.count({ where: { isActive: true } }),
+      db.payoutRequest.count({ where: { status: 'pending' } }),
       db.user.findMany({
         where: { role: 'client' },
         orderBy: { createdAt: 'desc' },
@@ -54,6 +80,10 @@ export default async function AdminOverview() {
     active: activeSubs,
     pending: pendingVerifs,
     newThisMonth,
+    coachPosts: publishedPosts,
+    videos: videoItems,
+    affiliates: activeAffiliates,
+    payouts: pendingPayouts,
   }
 
   return (

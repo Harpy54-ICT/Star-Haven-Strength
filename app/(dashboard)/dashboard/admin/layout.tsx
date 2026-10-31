@@ -14,6 +14,9 @@ const ADMIN_LINKS = [
   { label: 'Military Verify', href: '/dashboard/admin/military-verify' },
   { label: 'Audit Log', href: '/dashboard/admin/audit-log' },
   { label: "Coach's Office", href: '/dashboard/admin/coaches-office' },
+  { label: 'Affiliates', href: '/dashboard/admin/affiliates' },
+  { label: 'Video Library', href: '/dashboard/admin/video-library' },
+  { label: 'Payouts', href: '/dashboard/admin/payouts' },
 ]
 
 export default async function AdminLayout({
