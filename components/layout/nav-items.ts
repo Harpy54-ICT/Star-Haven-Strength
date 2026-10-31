@@ -13,6 +13,7 @@ import {
   Library,
   MessageSquare,
   Bell,
+  Gift,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -39,5 +40,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Challenges', href: '/challenges', icon: Trophy },
   { label: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
   { label: 'Notifications', href: '/dashboard/notifications', icon: Bell },
+  { label: 'Referrals', href: '/dashboard/referrals', icon: Gift },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]

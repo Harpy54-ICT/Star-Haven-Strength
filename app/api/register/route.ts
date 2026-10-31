@@ -1,8 +1,39 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
 import type { AccountType } from '@/types'
+
+const REFERRAL_COOKIE = 'star_haven_referral'
+
+/**
+ * Attach a referral to a newly registered user, if a valid referral code was
+ * captured in the `star_haven_referral` cookie (set by middleware from `?ref=`).
+ * Best-effort: registration must never fail because of referral bookkeeping.
+ */
+async function attachReferral(newUserId: string): Promise<void> {
+  try {
+    const code = cookies().get(REFERRAL_COOKIE)?.value
+    if (!code) return
+
+    const referralCode = await db.referralCode.findUnique({ where: { code } })
+    // Ignore unknown codes and self-referrals.
+    if (!referralCode || referralCode.userId === newUserId) return
+
+    await db.referral.create({
+      data: {
+        referrerId: referralCode.userId,
+        refereeId: newUserId,
+        referralCode: code,
+        status: 'converted',
+        convertedAt: new Date(),
+      },
+    })
+  } catch (e) {
+    console.error('[register] referral attach failed:', e)
+  }
+}
 
 const registerSchema = z
   .object({
@@ -62,6 +93,9 @@ export async function POST(req: Request) {
       },
       select: { id: true, email: true },
     })
+
+    // Tie the new account to a referrer if a referral code was captured.
+    await attachReferral(user.id)
 
     return NextResponse.json({ success: true, userId: user.id }, { status: 201 })
   } catch (error) {

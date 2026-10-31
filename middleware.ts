@@ -35,7 +35,25 @@ export async function middleware(req: NextRequest) {
 
   const isDashboard = pathname.startsWith('/dashboard')
   const isAdminRoute = pathname.startsWith('/dashboard/admin')
+  const isAdminApi = pathname.startsWith('/api/admin')
   const isAuthRoute = pathname === '/login' || pathname === '/register'
+
+  // Defense-in-depth for admin APIs (routes also enforce requireAdmin). Return
+  // JSON errors rather than redirects so API clients get a sensible status.
+  if (isAdminApi) {
+    if (!isLoggedIn) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    if (role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+  }
 
   // Build the response first so we can attach the referral cookie regardless of
   // which branch handles the request.
