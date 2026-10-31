@@ -28,6 +28,15 @@ const FOOTER_SECTIONS = [
       { label: 'Get Started', href: '/pricing' },
     ],
   },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Refund Policy', href: '/refund-policy' },
+      { label: 'Medical Disclaimer', href: '/medical-disclaimer' },
+    ],
+  },
 ]
 
 /** Public marketing footer with link columns, tagline, and copyright. */
@@ -36,7 +45,7 @@ export default function MarketingFooter() {
   return (
     <footer className="border-t border-grey-mid bg-green">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <span className="font-display text-lg font-bold uppercase tracking-wide text-gold">
               Star Haven Strength

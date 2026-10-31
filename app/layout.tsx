@@ -21,13 +21,20 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Star Haven Strength | Coming Soon",
+  metadataBase: new URL("https://www.starhavenstrength.com"),
+  title: {
+    default: "Star Haven Strength | Online Personal Training",
+    template: "%s | Star Haven Strength",
+  },
   description:
-    "Train like a Star, Feel like a Star. Star Haven Strength — online personal training. Coming soon.",
+    "Train like a Star, Feel like a Star. Star Haven Strength is veteran-owned online personal training for youth, adults, and the military community.",
   openGraph: {
-    title: "Star Haven Strength | Coming Soon",
-    description: "Train like a Star, Feel like a Star. Coming soon.",
+    title: "Star Haven Strength | Online Personal Training",
+    description:
+      "Train like a Star, Feel like a Star. Veteran-owned online personal training.",
     type: "website",
+    siteName: "Star Haven Strength",
+    url: "https://www.starhavenstrength.com",
   },
 };
 
