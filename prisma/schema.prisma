@@ -915,3 +915,40 @@ model ClientIntake {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// =============================================================================
+// COACH'S OFFICE
+// =============================================================================
+
+enum CoachPostType {
+  science_review // reviewing a research paper
+  workout_info   // workout tips, technique info
+  commentary     // general coaching thoughts
+}
+
+enum CoachPostStatus {
+  draft
+  published
+}
+
+model CoachPost {
+  id            String          @id @default(cuid())
+  title         String
+  slug          String          @unique
+  postType      CoachPostType   @default(commentary)
+  content       String          @db.Text
+  excerpt       String?
+  sourceTitle   String? // title of the paper/article being reviewed
+  sourceUrl     String? // link to original paper/source
+  sourceAuthors String? // authors of the paper
+  publishedYear Int? // year of the paper
+  tags          String[]
+  coverImageUrl String?
+  status        CoachPostStatus @default(draft)
+  publishedAt   DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([postType])
+}
