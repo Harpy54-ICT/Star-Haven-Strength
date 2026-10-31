@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { requireAuth } from '@/lib/auth/guards'
 import { withAuth } from '@/lib/auth/api-helpers'
 import { lbsToKg, kgToLbs } from '@/lib/units'
+import { awardXP, XP_AWARDS } from '@/lib/gamification/xp'
 
 /**
  * Workout logging API.
@@ -121,9 +122,33 @@ export const POST = withAuth(async (req: Request) => {
     }
   }
 
-  // XP award stub (gamification wiring comes later): 10 XP per set, capped 100.
-  const xpAwarded = Math.min(totalSets * 10, 100)
-  console.log(`[xp] user=${userId} workout=${log.id} awarded=${xpAwarded}`)
+  // ---- XP & milestone awards ----
+  let xpAwarded = XP_AWARDS.WORKOUT_LOGGED
+  await awardXP(userId, 'WORKOUT_LOGGED', XP_AWARDS.WORKOUT_LOGGED, {
+    workoutId: log.id,
+    totalSets,
+  })
+
+  // 100 XP per newly-set personal record.
+  for (const pr of newPRs) {
+    xpAwarded += XP_AWARDS.PR_ACHIEVED
+    await awardXP(userId, 'PR_ACHIEVED', XP_AWARDS.PR_ACHIEVED, {
+      exerciseName: pr.exerciseName,
+    })
+  }
+
+  // First-workout and count milestones (based on lifetime total including this one).
+  const workoutCount = await db.workoutLog.count({ where: { userId } })
+  if (workoutCount === 1) {
+    xpAwarded += XP_AWARDS.FIRST_WORKOUT
+    await awardXP(userId, 'FIRST_WORKOUT', XP_AWARDS.FIRST_WORKOUT)
+  } else if (workoutCount === 10) {
+    xpAwarded += XP_AWARDS.WORKOUTS_10
+    await awardXP(userId, 'WORKOUTS_10', XP_AWARDS.WORKOUTS_10)
+  } else if (workoutCount === 50) {
+    xpAwarded += XP_AWARDS.WORKOUTS_50
+    await awardXP(userId, 'WORKOUTS_50', XP_AWARDS.WORKOUTS_50)
+  }
 
   return NextResponse.json({ id: log.id, newPRs, xpAwarded })
 })

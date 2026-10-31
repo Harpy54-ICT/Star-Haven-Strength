@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db/client'
 import { requireAuth } from '@/lib/auth/guards'
 import { withAuth } from '@/lib/auth/api-helpers'
+import { awardXP, XP_AWARDS } from '@/lib/gamification/xp'
 
 const step1Schema = z.object({
   hasInjuries: z.boolean(),
@@ -73,8 +74,9 @@ export const POST = withAuth(async (req: Request) => {
     },
   })
 
-  // XP award stub — gamification wiring arrives in a later prompt.
-  console.log(`[xp] Award 100 XP to user ${userId} for completing intake`)
+  // Award XP for completing the intake questionnaire (idempotent-ish: the
+  // "Ready to Train" badge is awarded once by checkAndAwardBadges).
+  await awardXP(userId, 'INTAKE_COMPLETED', XP_AWARDS.INTAKE_COMPLETED)
 
   return NextResponse.json({ success: true, redirect: '/dashboard' })
 })

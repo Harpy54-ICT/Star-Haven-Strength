@@ -4,6 +4,7 @@ import { db } from '@/lib/db/client'
 import { requireAuth } from '@/lib/auth/guards'
 import { withAuth } from '@/lib/auth/api-helpers'
 import { milesToMeters, kmToMeters } from '@/lib/units'
+import { awardXP, XP_AWARDS } from '@/lib/gamification/xp'
 
 /**
  * Cardio logging API. Distances are entered in miles or km and converted to
@@ -64,11 +65,12 @@ export const POST = withAuth(async (req: Request) => {
     select: { id: true },
   })
 
-  // XP award stub: 1 XP per minute, capped at 100.
-  const xpAwarded = Math.min(Math.round(d.durationSeconds / 60), 100)
-  console.log(`[xp] user=${userId} cardio=${log.id} awarded=${xpAwarded}`)
+  // Award XP for logging cardio.
+  await awardXP(userId, 'CARDIO_LOGGED', XP_AWARDS.CARDIO_LOGGED, {
+    cardioId: log.id,
+  })
 
-  return NextResponse.json({ id: log.id, xpAwarded })
+  return NextResponse.json({ id: log.id, xpAwarded: XP_AWARDS.CARDIO_LOGGED })
 })
 
 export const GET = withAuth(async (req: Request) => {
