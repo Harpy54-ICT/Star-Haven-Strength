@@ -4,6 +4,10 @@ import { randomBytes } from 'crypto'
 import { db } from '@/lib/db/client'
 import { stripe } from '@/lib/stripe/client'
 import { getTierBaseline } from '@/lib/stripe/pricing'
+import {
+  computeCommissionCents,
+  commissionMonthKey,
+} from '@/lib/referrals/commission'
 import type {
   SubscriptionTier,
   SubscriptionStatus,
@@ -230,6 +234,57 @@ async function handleInvoicePaymentSucceeded(
         : {}),
     },
   })
+
+  // Referral commission: if the paying user was referred (a converted Referral
+  // exists), credit the referrer a commission for this payment.
+  await maybeCreateReferralCommission(invoice)
+}
+
+/**
+ * Create a CommissionLedgerEntry for the referrer of a paying user, if one
+ * applies. Idempotent per (referrer, referee, month) via the schema's unique
+ * constraint — a duplicate Stripe delivery in the same month is a no-op.
+ * Self-referrals never earn commission.
+ */
+async function maybeCreateReferralCommission(
+  invoice: Stripe.Invoice
+): Promise<void> {
+  const amountPaid = invoice.amount_paid ?? 0
+  if (amountPaid <= 0) return
+
+  const customerId =
+    typeof invoice.customer === 'string'
+      ? invoice.customer
+      : invoice.customer?.id ?? ''
+  const refereeId = await findUserIdForCustomer(customerId)
+  if (!refereeId) return
+
+  // Find the converted referral that brought this user in.
+  const referral = await db.referral.findFirst({
+    where: { refereeId, status: 'converted' },
+    select: { referrerId: true },
+  })
+  if (!referral) return
+  if (referral.referrerId === refereeId) return // never pay self-referrals
+
+  const amountCents = computeCommissionCents(amountPaid)
+  if (amountCents <= 0) return
+
+  const month = commissionMonthKey(new Date())
+  await db.commissionLedgerEntry
+    .create({
+      data: {
+        referrerId: referral.referrerId,
+        refereeId,
+        month,
+        amountCents,
+        status: 'pending',
+      },
+    })
+    .catch(() => {
+      // Unique violation on (referrerId, refereeId, month) — already recorded
+      // for this month; idempotent no-op.
+    })
 }
 
 async function handleInvoicePaymentFailed(

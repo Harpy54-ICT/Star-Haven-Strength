@@ -10,6 +10,7 @@ const ADMIN_LINKS = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Overview', href: '/dashboard/admin' },
   { label: 'All Clients', href: '/dashboard/admin/clients' },
+  { label: 'Programs', href: '/dashboard/admin/programs' },
   { label: 'Military Verify', href: '/dashboard/admin/military-verify' },
   { label: 'Audit Log', href: '/dashboard/admin/audit-log' },
   { label: "Coach's Office", href: '/dashboard/admin/coaches-office' },

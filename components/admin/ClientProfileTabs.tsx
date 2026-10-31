@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { MessageSquare, ShieldCheck } from 'lucide-react'
 
@@ -54,8 +54,156 @@ export interface ClientProfileData {
   referral: { code: string | null; referralsMade: number }
 }
 
-const TABS = ['Overview', 'Logs', 'Check-Ins', 'Subscription'] as const
+const TABS = [
+  'Overview',
+  'Program',
+  'Logs',
+  'Check-Ins',
+  'Subscription',
+] as const
 type Tab = (typeof TABS)[number]
+
+interface ProgramAssignment {
+  id: string
+  status: string
+  enrolledAt: string
+  cohort: {
+    id: string
+    name: string
+    durationWeeks: number
+    status: string
+  }
+}
+interface ProgramOption {
+  id: string
+  name: string
+  status: string
+}
+
+/** Self-fetching admin tab to assign / update a client's program. */
+function ProgramTab({ userId }: { userId: string }) {
+  const [assignments, setAssignments] = useState<ProgramAssignment[]>([])
+  const [programs, setPrograms] = useState<ProgramOption[]>([])
+  const [selected, setSelected] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    const res = await fetch(`/api/admin/clients/${userId}/program`)
+    if (res.ok) {
+      const data = await res.json()
+      setAssignments(data.assignments ?? [])
+      setPrograms(data.programs ?? [])
+    }
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  async function assign() {
+    if (!selected) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/clients/${userId}/program`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cohortId: selected }),
+      })
+      if (res.ok) {
+        setSelected('')
+        await load()
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function unassign(cohortId: string) {
+    const res = await fetch(
+      `/api/admin/clients/${userId}/program?cohortId=${cohortId}`,
+      { method: 'DELETE' }
+    )
+    if (res.ok) await load()
+  }
+
+  if (loading) {
+    return (
+      <p className="font-body text-sm text-grey-dark">Loading program…</p>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-grey-mid bg-white p-5">
+        <h3 className="font-display text-sm font-bold uppercase tracking-wide text-green">
+          Assign a Program
+        </h3>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="min-w-[14rem] rounded-lg border border-grey-mid px-3 py-2 font-body text-sm text-charcoal focus:border-green focus:outline-none"
+          >
+            <option value="">Select a program…</option>
+            {programs.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.status})
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={assign}
+            disabled={saving || !selected}
+            className="rounded-lg bg-green px-4 py-2 font-body text-sm font-semibold text-gold hover:bg-green-light disabled:opacity-50"
+          >
+            {saving ? 'Assigning…' : 'Assign'}
+          </button>
+        </div>
+        <p className="mt-2 font-body text-xs text-grey-dark">
+          The client is notified and the program appears on their My Program
+          page.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-grey-mid bg-white p-5">
+        <h3 className="font-display text-sm font-bold uppercase tracking-wide text-green">
+          Current Assignments
+        </h3>
+        {assignments.length === 0 ? (
+          <p className="mt-2 font-body text-sm text-grey-dark">
+            No programs assigned yet.
+          </p>
+        ) : (
+          <ul className="mt-3 divide-y divide-grey-mid">
+            {assignments.map((a) => (
+              <li
+                key={a.id}
+                className="flex items-center justify-between py-2.5"
+              >
+                <div>
+                  <p className="font-body text-sm font-semibold text-charcoal">
+                    {a.cohort.name}
+                  </p>
+                  <p className="font-mono text-xs text-grey-dark">
+                    {a.cohort.durationWeeks} wks · status: {a.status}
+                  </p>
+                </div>
+                <button
+                  onClick={() => unassign(a.cohort.id)}
+                  className="rounded-md border border-grey-mid px-2.5 py-1.5 font-body text-xs font-semibold text-red-600 hover:bg-grey-light"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function tierLabel(tier: string): string {
   const [key, audience] = tier.split('_')
@@ -193,6 +341,8 @@ export default function ClientProfileTabs({ data }: { data: ClientProfileData })
             </div>
           </div>
         )}
+
+        {tab === 'Program' && <ProgramTab userId={user.id} />}
 
         {tab === 'Logs' && (
           <div className="space-y-4">
