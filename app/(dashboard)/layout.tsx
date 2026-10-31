@@ -18,7 +18,13 @@ export default async function DashboardLayout({
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { firstName: true, lastName: true, email: true, image: true },
+    select: {
+      firstName: true,
+      lastName: true,
+      email: true,
+      image: true,
+      role: true,
+    },
   })
 
   const sidebarUser: SidebarUser = {
@@ -28,6 +34,7 @@ export default async function DashboardLayout({
       'Member',
     email: user?.email ?? '',
     image: user?.image ?? null,
+    role: user?.role,
   }
 
   return (

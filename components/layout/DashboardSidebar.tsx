@@ -4,13 +4,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { LogOut } from 'lucide-react'
+import { LogOut, Shield } from 'lucide-react'
 import { NAV_ITEMS } from '@/components/layout/nav-items'
+import NotificationBadge from '@/components/layout/NotificationBadge'
 
 export interface SidebarUser {
   name: string
   email: string
   image?: string | null
+  role?: 'admin' | 'client'
 }
 
 interface DashboardSidebarProps {
@@ -65,12 +67,38 @@ export default function DashboardSidebar({
                       : 'text-white/80 hover:bg-green-light/40 hover:text-white',
                   ].join(' ')}
                 >
-                  <Icon size={19} className="shrink-0" />
+                  <span className="relative shrink-0">
+                    <Icon size={19} className="shrink-0" />
+                    {item.href === '/dashboard/notifications' && (
+                      <NotificationBadge />
+                    )}
+                  </span>
                   {item.label}
                 </Link>
               </li>
             )
           })}
+
+          {user.role === 'admin' && (
+            <li>
+              <Link
+                href="/dashboard/admin"
+                onClick={onNavigate}
+                aria-current={
+                  isActive(pathname, '/dashboard/admin') ? 'page' : undefined
+                }
+                className={[
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 font-body text-sm font-medium transition-colors',
+                  isActive(pathname, '/dashboard/admin')
+                    ? 'bg-green text-gold'
+                    : 'text-gold/90 hover:bg-green-light/40 hover:text-gold',
+                ].join(' ')}
+              >
+                <Shield size={19} className="shrink-0" />
+                Admin Panel
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
 

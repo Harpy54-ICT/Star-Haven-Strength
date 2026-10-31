@@ -12,6 +12,7 @@ import {
   Medal,
   Library,
   MessageSquare,
+  Bell,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -37,5 +38,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Achievements', href: '/dashboard/achievements', icon: Medal },
   { label: 'Challenges', href: '/challenges', icon: Trophy },
   { label: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+  { label: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]

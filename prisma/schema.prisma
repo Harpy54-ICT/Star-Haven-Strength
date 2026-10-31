@@ -174,6 +174,8 @@ model User {
   affiliateClicks        AffiliateClick[]
   cohortDiscussions      CohortDiscussion[]
   clientIntake           ClientIntake?
+  messagesSent           DirectMessage[]          @relation("MessageSender")
+  messagesReceived       DirectMessage[]          @relation("MessageRecipient")
 
   @@index([role])
   @@index([accountType])
@@ -951,4 +953,22 @@ model CoachPost {
 
   @@index([status, publishedAt])
   @@index([postType])
+}
+
+// =============================================================================
+// DIRECT MESSAGING
+// =============================================================================
+
+model DirectMessage {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  content     String   @db.Text
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([senderId, recipientId])
 }
