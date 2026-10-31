@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
 import { stripe, assertStripeConfigured } from '@/lib/stripe/client'
@@ -78,6 +79,25 @@ export const POST = withAuth(async (req: Request) => {
   // Determine applicable discount (military takes precedence over newbie).
   const discounts = await buildDiscountsArray(userId)
 
+  // Affiliate attribution: if the visitor arrived via an affiliate link, the
+  // httpOnly `shs_aff` cookie holds the partner's tracking code. Resolve it to
+  // an active partner and carry it through checkout + subscription metadata so
+  // the webhook can credit the partner on paid invoices.
+  const affCode = cookies().get('shs_aff')?.value ?? null
+  let affiliateMeta: Record<string, string> = {}
+  if (affCode) {
+    const partner = await db.affiliatePartner.findFirst({
+      where: { trackingParam: affCode, isActive: true },
+      select: { id: true },
+    })
+    if (partner) {
+      affiliateMeta = {
+        affiliateCode: affCode,
+        affiliatePartnerId: partner.id,
+      }
+    }
+  }
+
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
@@ -89,9 +109,9 @@ export const POST = withAuth(async (req: Request) => {
     success_url: `${appUrl()}/dashboard/welcome?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl()}/pricing`,
     subscription_data: {
-      metadata: { userId: user.id, billingPeriod },
+      metadata: { userId: user.id, billingPeriod, ...affiliateMeta },
     },
-    metadata: { userId: user.id, billingPeriod, priceId },
+    metadata: { userId: user.id, billingPeriod, priceId, ...affiliateMeta },
   })
 
   if (!checkoutSession.url) {

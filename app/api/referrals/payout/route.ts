@@ -69,7 +69,7 @@ export const POST = withAuth(async () => {
           data: {
             userId: admin.id,
             title: 'New payout request',
-            message: `${requesterName} requested a referral payout of ${amountLabel}.`,
+            message: `${requesterName} requested a referral payout of ${amountLabel}. Review it in Admin → Payouts (/dashboard/admin/payouts).`,
             type: 'payout_request',
           },
         })

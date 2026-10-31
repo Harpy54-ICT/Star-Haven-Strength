@@ -184,6 +184,32 @@ async function handleCheckoutCompleted(
     const code = `SHS-${randomBytes(4).toString('hex').toUpperCase()}`
     await db.referralCode.create({ data: { userId, code } })
   }
+
+  // Affiliate attribution: mark the most recent click for this partner as
+  // converted (earnings themselves are accrued on invoice.payment_succeeded).
+  const affiliatePartnerId = session.metadata?.affiliatePartnerId
+  if (affiliatePartnerId) {
+    const click = await db.affiliateClick.findFirst({
+      where: {
+        partnerId: affiliatePartnerId,
+        converted: false,
+        ...(userId ? { userId } : {}),
+      },
+      orderBy: { clickedAt: 'desc' },
+      select: { id: true },
+    })
+    if (click) {
+      await db.affiliateClick
+        .update({
+          where: { id: click.id },
+          data: {
+            converted: true,
+            orderValueCents: session.amount_total ?? null,
+          },
+        })
+        .catch(() => null)
+    }
+  }
 }
 
 async function handleSubscriptionUpdated(
@@ -238,6 +264,12 @@ async function handleInvoicePaymentSucceeded(
   // Referral commission: if the paying user was referred (a converted Referral
   // exists), credit the referrer a commission for this payment.
   await maybeCreateReferralCommission(invoice)
+
+  // Affiliate earning: if the subscription carries affiliate attribution
+  // metadata, roll this payment into the partner's monthly earnings.
+  const affiliatePartnerId =
+    await getAffiliatePartnerIdForSubscription(subscriptionId)
+  await maybeCreateAffiliateEarning(affiliatePartnerId, invoice.amount_paid ?? 0)
 }
 
 /**
@@ -284,6 +316,74 @@ async function maybeCreateReferralCommission(
     .catch(() => {
       // Unique violation on (referrerId, refereeId, month) — already recorded
       // for this month; idempotent no-op.
+    })
+}
+
+// ---------------------------------------------------------------------------
+// Affiliate earnings
+// ---------------------------------------------------------------------------
+
+/** Commission rate is stored as a fraction (0.10 = 10%); fall back to 10%. */
+function resolveCommissionRate(rate: unknown): number {
+  const n = Number(rate)
+  if (!Number.isFinite(n) || n <= 0) return 0.1
+  // Defensive: if ever stored as a percentage (e.g. 10), treat it as such.
+  return n > 1 ? n / 100 : n
+}
+
+/** Read the affiliate partner id (if any) from a subscription's metadata. */
+async function getAffiliatePartnerIdForSubscription(
+  subscriptionId: string
+): Promise<string | null> {
+  try {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId)
+    return sub.metadata?.affiliatePartnerId || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Roll a paid invoice up into the partner's monthly AffiliateEarning row using
+ * the partner's commissionRate (fraction; default 10%). Idempotent at the event
+ * level via ProcessedStripeEvent, so a given invoice event increments once. The
+ * AffiliateEarning row is keyed by (partnerId, month) — there is no per-invoice
+ * field in the schema, so monthly totals are accumulated.
+ */
+async function maybeCreateAffiliateEarning(
+  partnerId: string | null | undefined,
+  amountPaidCents: number
+): Promise<void> {
+  if (!partnerId || amountPaidCents <= 0) return
+
+  const partner = await db.affiliatePartner.findUnique({
+    where: { id: partnerId },
+    select: { id: true, commissionRate: true, isActive: true },
+  })
+  if (!partner || !partner.isActive) return
+
+  const rate = resolveCommissionRate(partner.commissionRate)
+  const earnedCents = Math.round(amountPaidCents * rate)
+  if (earnedCents <= 0) return
+
+  const month = commissionMonthKey(new Date())
+  await db.affiliateEarning
+    .upsert({
+      where: { partnerId_month: { partnerId: partner.id, month } },
+      create: {
+        partnerId: partner.id,
+        month,
+        totalConversions: 1,
+        totalEarnedCents: earnedCents,
+        status: 'pending',
+      },
+      update: {
+        totalConversions: { increment: 1 },
+        totalEarnedCents: { increment: earnedCents },
+      },
+    })
+    .catch((e) => {
+      console.error('[stripe] affiliate earning upsert failed:', e)
     })
 }
 

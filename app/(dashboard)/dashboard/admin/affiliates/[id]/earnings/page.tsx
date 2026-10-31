@@ -82,13 +82,11 @@ export default async function AffiliateEarningsPage({
       </div>
 
       {/*
-        TODO: Affiliate earnings are currently populated only by manual/seeded
-        data. Wire real click + conversion tracking from checkout: on an order
-        that carries an affiliate tracking param (AffiliatePartner.trackingParam)
-        in its attribution, create an AffiliateClick (converted=true,
-        orderValueCents) and roll it up into the AffiliateEarning row for the
-        current month (commissionRate * orderValue). This public-facing tracking
-        is intentionally deferred for now.
+        Affiliate click + conversion tracking is wired: visitors arriving via
+        `/go/<trackingParam>` record an AffiliateClick and get an `shs_aff`
+        cookie; checkout carries the partner into Stripe metadata; and the
+        Stripe webhook rolls each paid invoice into this month's AffiliateEarning
+        row (commissionRate * amount paid).
       */}
     </div>
   )
