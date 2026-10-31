@@ -30,6 +30,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { label: 'My Program', href: '/dashboard/program', icon: ClipboardList },
+  { label: 'Workout Plan', href: '/dashboard/workout-plan', icon: ClipboardList },
   {
     label: 'New Member Program',
     href: '/dashboard/newbie-program',

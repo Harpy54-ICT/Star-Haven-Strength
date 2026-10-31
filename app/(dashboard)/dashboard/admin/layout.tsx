@@ -12,6 +12,7 @@ const ADMIN_LINKS = [
   { label: 'All Clients', href: '/dashboard/admin/clients' },
   { label: 'Check-Ins', href: '/dashboard/admin/check-ins' },
   { label: 'Bookings', href: '/dashboard/admin/bookings' },
+  { label: 'Workout Plans', href: '/dashboard/admin/workout-plans' },
   { label: 'Programs', href: '/dashboard/admin/programs' },
   { label: 'Military Verify', href: '/dashboard/admin/military-verify' },
   { label: 'Audit Log', href: '/dashboard/admin/audit-log' },

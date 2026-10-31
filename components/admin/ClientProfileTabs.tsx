@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { MessageSquare, ShieldCheck } from 'lucide-react'
+import ClientProgressCharts from '@/components/admin/ClientProgressCharts'
 
 export interface ClientProfileData {
   user: {
@@ -60,6 +61,7 @@ const TABS = [
   'Logs',
   'Check-Ins',
   'Subscription',
+  'Progress',
 ] as const
 type Tab = (typeof TABS)[number]
 
@@ -480,6 +482,8 @@ export default function ClientProfileTabs({ data }: { data: ClientProfileData })
             )}
           </div>
         )}
+
+        {tab === 'Progress' && <ClientProgressCharts clientId={user.id} />}
       </div>
     </div>
   )
