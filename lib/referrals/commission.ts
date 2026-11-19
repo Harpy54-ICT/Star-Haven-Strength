@@ -9,6 +9,17 @@
 export const REFERRAL_COMMISSION_RATE = 0.1 // 10%
 
 /**
+ * Minimum balance (in cents) a member must have accrued before they can request
+ * a payout. Single source of truth — reused by the payout API and the portal UI.
+ */
+export const MIN_PAYOUT_CENTS = 5000 // $50
+
+/** The commission rate expressed as a whole percentage for display, e.g. 10. */
+export function commissionRatePercent(): number {
+  return Math.round(REFERRAL_COMMISSION_RATE * 100)
+}
+
+/**
  * Compute the commission (in cents) owed to a referrer for a given payment.
  * Rounds to the nearest cent and never returns a negative value.
  */
