@@ -13,8 +13,8 @@ export const dynamic = 'force-dynamic'
  * Signature verification (per Terra docs): the `terra-signature` header has the
  * form `t=<timestamp>,v1=<hmac>` where the HMAC is
  * HMAC-SHA256(`<timestamp>.<rawBody>`) keyed with TERRA_WEBHOOK_SECRET (the
- * "signing secret"). If TERRA_WEBHOOK_SECRET is unset we skip verification and
- * log a warning so local/stub development still works.
+ * "signing secret"). If TERRA_WEBHOOK_SECRET is unset we fail closed and reject
+ * the request, since we cannot confirm it really came from Terra.
  *
  * TODO: confirm the exact header name/format against the live Terra dashboard
  * (Terra has used `terra-signature`); wire real persistence once wearables are
@@ -56,16 +56,22 @@ export async function POST(req: Request) {
   const rawBody = await req.text()
   const secret = process.env.TERRA_WEBHOOK_SECRET
 
-  if (secret) {
-    const signature = req.headers.get('terra-signature')
-    if (!verifyTerraSignature(rawBody, signature, secret)) {
-      console.error('[terra] signature verification failed')
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-    }
-  } else {
-    console.warn(
-      '[terra] TERRA_WEBHOOK_SECRET not set — skipping signature verification (stub mode)'
+  // Fail closed: without a signing secret we cannot verify the payload is
+  // genuinely from Terra, so we reject rather than trust unverified data.
+  if (!secret) {
+    console.error(
+      '[terra] TERRA_WEBHOOK_SECRET not set — refusing unverified webhook'
     )
+    return NextResponse.json(
+      { error: 'Webhook not configured' },
+      { status: 401 }
+    )
+  }
+
+  const signature = req.headers.get('terra-signature')
+  if (!verifyTerraSignature(rawBody, signature, secret)) {
+    console.error('[terra] signature verification failed')
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
   let payload: unknown = null

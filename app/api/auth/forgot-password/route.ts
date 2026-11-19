@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
+import { enforceRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 const schema = z.object({ email: z.string().email() })
 
@@ -17,6 +18,15 @@ const schema = z.object({ email: z.string().email() })
  */
 export async function POST(req: Request) {
   try {
+    // Limit reset requests per IP to curb abuse and email enumeration attempts.
+    const limited = await enforceRateLimit({
+      action: 'forgot-password',
+      identifier: getClientIp(req),
+      limit: 5,
+      windowSeconds: 60 * 15,
+    })
+    if (limited) return limited
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {

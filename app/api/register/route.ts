@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
+import { enforceRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import type { AccountType } from '@/types'
 
 const REFERRAL_COOKIE = 'star_haven_referral'
@@ -55,6 +56,15 @@ const registerSchema = z
 
 export async function POST(req: Request) {
   try {
+    // Limit signups per IP to slow bulk/bot account creation.
+    const limited = await enforceRateLimit({
+      action: 'register',
+      identifier: getClientIp(req),
+      limit: 5,
+      windowSeconds: 60 * 15,
+    })
+    if (limited) return limited
+
     const body = await req.json()
     const parsed = registerSchema.safeParse(body)
 

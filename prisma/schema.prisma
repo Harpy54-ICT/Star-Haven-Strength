@@ -995,3 +995,15 @@ model WorkoutPlan {
   @@index([userId])
   @@index([userId, isActive])
 }
+
+// Records a single attempt against a sensitive action (login, signup, password
+// reset, contact) for rate limiting. Keyed by "<action>:<ip-or-identifier>".
+// Rows are counted within a short rolling window and pruned opportunistically.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+  @@index([createdAt])
+}

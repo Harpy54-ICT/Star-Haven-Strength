@@ -18,11 +18,15 @@ export const dynamic = 'force-dynamic'
  *  3. Returns a JSON summary.
  */
 export async function GET(req: Request) {
+  // Fail closed: if the cron secret is not configured, refuse to run at all.
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    console.error('[cron:newbie-pulse] CRON_SECRET is not set — refusing to run')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const authHeader = req.headers.get('authorization')
-  if (
-    process.env.CRON_SECRET &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

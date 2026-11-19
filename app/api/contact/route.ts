@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
+import { enforceRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 /**
  * Public contact / waitlist endpoint.
@@ -20,6 +21,15 @@ const schema = z.object({
 })
 
 export async function POST(req: Request) {
+  // Limit submissions per IP to curb form spam.
+  const limited = await enforceRateLimit({
+    action: 'contact',
+    identifier: getClientIp(req),
+    limit: 10,
+    windowSeconds: 60 * 15,
+  })
+  if (limited) return limited
+
   const json = await req.json().catch(() => null)
   const parsed = schema.safeParse(json)
   if (!parsed.success) {

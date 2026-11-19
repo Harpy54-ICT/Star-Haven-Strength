@@ -5,6 +5,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 import type { AccountType, UserRole } from '@/types'
 
 const credentialsSchema = z.object({
@@ -43,8 +44,23 @@ export const authConfig: NextAuthConfig = {
         }
 
         const { email, password } = parsed.data
+        const normalizedEmail = email.toLowerCase()
+
+        // Rate limit login attempts per email to slow password brute-forcing.
+        // Fails open on limiter errors so real users are never locked out.
+        const rl = await checkRateLimit({
+          action: 'login',
+          identifier: normalizedEmail,
+          limit: 10,
+          windowSeconds: 60 * 15,
+        })
+        if (!rl.ok) {
+          console.warn(`[auth] Rate limit exceeded for login: ${normalizedEmail}`)
+          return null
+        }
+
         const user = await db.user.findUnique({
-          where: { email: email.toLowerCase() },
+          where: { email: normalizedEmail },
         })
 
         if (!user) {

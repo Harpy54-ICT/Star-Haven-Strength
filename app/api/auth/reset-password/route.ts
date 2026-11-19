@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
+import { enforceRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 const schema = z.object({
   token: z.string().min(1, 'Reset token is required'),
@@ -13,6 +14,15 @@ const schema = z.object({
  */
 export async function POST(req: Request) {
   try {
+    // Limit reset attempts per IP to slow token-guessing.
+    const limited = await enforceRateLimit({
+      action: 'reset-password',
+      identifier: getClientIp(req),
+      limit: 10,
+      windowSeconds: 60 * 15,
+    })
+    if (limited) return limited
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {
