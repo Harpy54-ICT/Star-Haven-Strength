@@ -16,7 +16,11 @@ export async function middleware(req: NextRequest) {
   const { nextUrl } = req
   const { pathname, searchParams } = nextUrl
 
-  const token = await getToken({
+  // Wrapped in try/catch: a malformed Authorization header can make getToken
+  // throw (known Auth.js issue). Treat that as "not logged in" instead of a crash.
+  let token: Awaited<ReturnType<typeof getToken>> = null
+  try {
+    token = await getToken({
     req,
     secret: process.env.AUTH_SECRET,
     // Auth.js v5 uses the `authjs.session-token` cookie name by default.
@@ -28,7 +32,10 @@ export async function middleware(req: NextRequest) {
       process.env.NODE_ENV === 'production'
         ? '__Secure-authjs.session-token'
         : 'authjs.session-token',
-  })
+    })
+  } catch {
+    token = null
+  }
 
   const isLoggedIn = !!token
   const role = (token?.role as string | undefined) ?? 'client'
