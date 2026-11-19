@@ -237,3 +237,42 @@ export function resolvePriceId(
 ): string | undefined {
   return process.env[priceIdEnvKey(key, audience, period)]
 }
+
+export interface ResolvedPrice {
+  priceId: string
+  key: TierKey
+  audience: Audience
+  period: BillingPeriod
+}
+
+/**
+ * Build the full set of configured Stripe price ids keyed by tier / audience /
+ * period, reading only from server env. Used to validate a client-supplied
+ * priceId against the server's allow-list (and to learn its audience so we can
+ * gate military pricing behind verification). Server-only.
+ */
+export function resolveAllPriceIds(): ResolvedPrice[] {
+  const audiences: Audience[] = ['civilian', 'military']
+  const periods: BillingPeriod[] = ['monthly', 'annual']
+  const out: ResolvedPrice[] = []
+  for (const tier of TIERS) {
+    for (const audience of audiences) {
+      for (const period of periods) {
+        const priceId = resolvePriceId(tier.key, audience, period)
+        if (priceId) {
+          out.push({ priceId, key: tier.key, audience, period })
+        }
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * Look up a client-supplied Stripe price id against the server allow-list.
+ * Returns the matching ResolvedPrice, or undefined if the id is not one of the
+ * configured Star Haven prices. Server-only.
+ */
+export function lookupPriceId(priceId: string): ResolvedPrice | undefined {
+  return resolveAllPriceIds().find((p) => p.priceId === priceId)
+}

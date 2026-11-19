@@ -3,7 +3,11 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/lib/db/client'
 import { stripe, assertStripeConfigured } from '@/lib/stripe/client'
-import { buildDiscountsArray } from '@/lib/stripe/discounts'
+import {
+  buildDiscountsArray,
+  checkMilitaryDiscountEligibility,
+} from '@/lib/stripe/discounts'
+import { lookupPriceId } from '@/lib/stripe/pricing'
 import { requireAuth } from '@/lib/auth/guards'
 import { withAuth } from '@/lib/auth/api-helpers'
 
@@ -34,6 +38,39 @@ export const POST = withAuth(async (req: Request) => {
     )
   }
   const { priceId, billingPeriod } = parsed.data
+
+  // Validate the client-supplied priceId against the server's allow-list. This
+  // prevents a caller from checking out at an arbitrary (e.g. cheaper) Stripe
+  // price. The server, not the client, decides which prices are purchasable.
+  const resolved = lookupPriceId(priceId)
+  if (!resolved) {
+    return NextResponse.json(
+      { error: 'Invalid plan selected.' },
+      { status: 400 }
+    )
+  }
+  // The billing period must match the resolved price's period.
+  if (resolved.period !== billingPeriod) {
+    return NextResponse.json(
+      { error: 'Plan and billing period do not match.' },
+      { status: 400 }
+    )
+  }
+  // Military/veteran pricing is cheaper and must only be purchasable by users
+  // whose military status has been verified. Block anyone else from selecting a
+  // military price id.
+  if (resolved.audience === 'military') {
+    const militaryEligible = await checkMilitaryDiscountEligibility(userId)
+    if (!militaryEligible) {
+      return NextResponse.json(
+        {
+          error:
+            'Military pricing requires a verified military or veteran account.',
+        },
+        { status: 403 }
+      )
+    }
+  }
 
   // Block if there is already an active/trialing subscription.
   const activeSub = await db.subscription.findFirst({
