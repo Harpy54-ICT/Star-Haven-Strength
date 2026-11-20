@@ -8,9 +8,9 @@ import { withAuth } from '@/lib/auth/api-helpers'
  * Full profile for a single client (never exposes passwordHash).
  */
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { userId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ userId: string }> }) => {
     await requireAdmin()
-    const { userId } = ctx.params
+    const { userId } = await ctx.params
 
     const user = await db.user.findUnique({
       where: { id: userId },

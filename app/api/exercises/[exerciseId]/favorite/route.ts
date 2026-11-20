@@ -6,10 +6,10 @@ import { withAuth } from '@/lib/auth/api-helpers'
 /** Add or remove an exercise from the current user's favorites. */
 
 export const POST = withAuth(
-  async (_req: Request, ctx: { params: { exerciseId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ exerciseId: string }> }) => {
     const session = await requireAuth()
     const userId = session.user.id
-    const { exerciseId } = ctx.params
+    const { exerciseId } = await ctx.params
     await db.exerciseFavorite.upsert({
       where: { userId_exerciseId: { userId, exerciseId } },
       create: { userId, exerciseId },
@@ -20,10 +20,10 @@ export const POST = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { exerciseId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ exerciseId: string }> }) => {
     const session = await requireAuth()
     const userId = session.user.id
-    const { exerciseId } = ctx.params
+    const { exerciseId } = await ctx.params
     await db.exerciseFavorite
       .delete({ where: { userId_exerciseId: { userId, exerciseId } } })
       .catch(() => null)

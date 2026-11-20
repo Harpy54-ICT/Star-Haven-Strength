@@ -7,12 +7,12 @@ import { slugify } from '@/lib/utils/slug'
 
 export const dynamic = 'force-dynamic'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 /** GET /api/admin/coach-posts/[id] — fetch a single post (any status). */
 export const GET = withAuth(async (_req: Request, ctx: Ctx) => {
   await requireAdmin()
-  const post = await db.coachPost.findUnique({ where: { id: ctx.params.id } })
+  const post = await db.coachPost.findUnique({ where: { id: (await ctx.params).id } })
   if (!post) {
     return NextResponse.json({ error: 'Post not found' }, { status: 404 })
   }
@@ -59,7 +59,7 @@ async function uniqueSlug(base: string, excludeId: string): Promise<string> {
 /** PATCH /api/admin/coach-posts/[id] — update a post. */
 export const PATCH = withAuth(async (req: Request, ctx: Ctx) => {
   await requireAdmin()
-  const { id } = ctx.params
+  const { id } = await ctx.params
 
   const current = await db.coachPost.findUnique({ where: { id } })
   if (!current) {
@@ -69,7 +69,7 @@ export const PATCH = withAuth(async (req: Request, ctx: Ctx) => {
   const parsed = updateSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.errors[0]?.message ?? 'Invalid input' },
+      { error: parsed.error.issues[0]?.message ?? 'Invalid input' },
       { status: 400 }
     )
   }
@@ -124,7 +124,7 @@ export const PATCH = withAuth(async (req: Request, ctx: Ctx) => {
 /** DELETE /api/admin/coach-posts/[id] — delete a post. */
 export const DELETE = withAuth(async (_req: Request, ctx: Ctx) => {
   await requireAdmin()
-  const { id } = ctx.params
+  const { id } = await ctx.params
   const existing = await db.coachPost.findUnique({
     where: { id },
     select: { id: true },

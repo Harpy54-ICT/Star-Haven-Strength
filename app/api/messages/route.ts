@@ -79,7 +79,7 @@ export const POST = withAuth(async (req: Request) => {
   const parsed = postSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.errors[0]?.message ?? 'Invalid message' },
+      { error: parsed.error.issues[0]?.message ?? 'Invalid message' },
       { status: 400 }
     )
   }

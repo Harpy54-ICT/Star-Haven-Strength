@@ -17,9 +17,9 @@ const patchSchema = z.object({
 })
 
 export const PATCH = withAuth(
-  async (req: Request, ctx: { params: { habitId: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ habitId: string }> }) => {
     const habit = await db.habit.findUnique({
-      where: { id: ctx.params.habitId },
+      where: { id: (await ctx.params).habitId },
       select: { userId: true },
     })
     if (!habit) {
@@ -32,7 +32,7 @@ export const PATCH = withAuth(
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
     }
     await db.habit.update({
-      where: { id: ctx.params.habitId },
+      where: { id: (await ctx.params).habitId },
       data: parsed.data,
     })
     return NextResponse.json({ ok: true })
@@ -40,9 +40,9 @@ export const PATCH = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { habitId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ habitId: string }> }) => {
     const habit = await db.habit.findUnique({
-      where: { id: ctx.params.habitId },
+      where: { id: (await ctx.params).habitId },
       select: { userId: true },
     })
     if (!habit) {
@@ -51,7 +51,7 @@ export const DELETE = withAuth(
     await requireOwnership(habit.userId)
     // Soft delete.
     await db.habit.update({
-      where: { id: ctx.params.habitId },
+      where: { id: (await ctx.params).habitId },
       data: { isActive: false },
     })
     return NextResponse.json({ ok: true })

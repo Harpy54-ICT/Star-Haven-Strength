@@ -19,9 +19,9 @@ const assignSchema = z.object({
 })
 
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { userId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ userId: string }> }) => {
     await requireAdmin()
-    const { userId } = ctx.params
+    const { userId } = await ctx.params
     const [assignments, programs] = await Promise.all([
       db.cohortEnrollment.findMany({
         where: { userId },
@@ -43,9 +43,9 @@ export const GET = withAuth(
 )
 
 export const POST = withAuth(
-  async (req: Request, ctx: { params: { userId: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ userId: string }> }) => {
     await requireAdmin()
-    const { userId } = ctx.params
+    const { userId } = await ctx.params
     const parsed = assignSchema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
@@ -86,9 +86,9 @@ export const POST = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (req: Request, ctx: { params: { userId: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ userId: string }> }) => {
     await requireAdmin()
-    const { userId } = ctx.params
+    const { userId } = await ctx.params
     const { searchParams } = new URL(req.url)
     const cohortId = searchParams.get('cohortId')
     if (!cohortId) {

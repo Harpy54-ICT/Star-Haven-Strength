@@ -19,10 +19,10 @@ const patchSchema = z.object({
 })
 
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { cohortId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     await requireAdmin()
     const cohort = await db.cohortProgram.findUnique({
-      where: { id: ctx.params.cohortId },
+      where: { id: (await ctx.params).cohortId },
       include: {
         enrollments: {
           orderBy: { enrolledAt: 'asc' },
@@ -47,7 +47,7 @@ export const GET = withAuth(
 )
 
 export const PATCH = withAuth(
-  async (req: Request, ctx: { params: { cohortId: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     await requireAdmin()
     const parsed = patchSchema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) {
@@ -55,7 +55,7 @@ export const PATCH = withAuth(
     }
     const { startDate, ...rest } = parsed.data
     await db.cohortProgram.update({
-      where: { id: ctx.params.cohortId },
+      where: { id: (await ctx.params).cohortId },
       data: {
         ...rest,
         ...(startDate !== undefined
@@ -68,9 +68,9 @@ export const PATCH = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { cohortId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     await requireAdmin()
-    await db.cohortProgram.delete({ where: { id: ctx.params.cohortId } })
+    await db.cohortProgram.delete({ where: { id: (await ctx.params).cohortId } })
     return NextResponse.json({ ok: true })
   }
 )

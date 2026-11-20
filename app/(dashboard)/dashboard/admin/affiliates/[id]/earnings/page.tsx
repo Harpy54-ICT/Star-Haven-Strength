@@ -9,12 +9,13 @@ export const dynamic = 'force-dynamic'
 export default async function AffiliateEarningsPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   await requireAdmin()
+  const { id } = await params
 
   const partner = await db.affiliatePartner.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       earnings: { orderBy: { month: 'desc' } },
     },

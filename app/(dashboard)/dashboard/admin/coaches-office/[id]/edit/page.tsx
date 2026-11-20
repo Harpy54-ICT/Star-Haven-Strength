@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic'
 export default async function EditCoachPostPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const post = await db.coachPost.findUnique({ where: { id: params.id } })
+  const { id } = await params
+  const post = await db.coachPost.findUnique({ where: { id } })
   if (!post) notFound()
 
   return (

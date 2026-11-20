@@ -8,10 +8,10 @@ export const dynamic = 'force-dynamic'
 
 /** GET /api/admin/workout-plans/[id] — a single plan with client info. */
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { id: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
     const plan = await db.workoutPlan.findUnique({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
       include: {
         user: {
           select: { id: true, firstName: true, lastName: true, email: true },
@@ -30,11 +30,11 @@ export const GET = withAuth(
  * deactivates any other active plan for the same client.
  */
 export const PUT = withAuth(
-  async (req: Request, ctx: { params: { id: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
 
     const existing = await db.workoutPlan.findUnique({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
       select: { id: true, userId: true, isActive: true, title: true },
     })
     if (!existing) {
@@ -46,7 +46,7 @@ export const PUT = withAuth(
     )
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0]?.message ?? 'Invalid data' },
+        { error: parsed.error.issues[0]?.message ?? 'Invalid data' },
         { status: 400 }
       )
     }
@@ -97,10 +97,10 @@ export const PUT = withAuth(
 
 /** DELETE /api/admin/workout-plans/[id]. */
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { id: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
     const existing = await db.workoutPlan.findUnique({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
       select: { id: true },
     })
     if (!existing) {

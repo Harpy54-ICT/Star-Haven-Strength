@@ -8,13 +8,13 @@ import { withAuth } from '@/lib/auth/api-helpers'
  * Only the recipient may mark their received message as read.
  */
 export const PATCH = withAuth(
-  async (_req: Request, ctx: { params: { messageId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ messageId: string }> }) => {
     const session = await requireAuth()
     const userId = session.user.id
 
     const result = await db.directMessage.updateMany({
       where: {
-        id: ctx.params.messageId,
+        id: (await ctx.params).messageId,
         recipientId: userId,
         readAt: null,
       },

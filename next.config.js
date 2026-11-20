@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // ESLint tooling (eslint-config-next) is installed to match Next 15, but
+    // this codebase was never linted during builds. Keep the build behavior
+    // identical by not failing it on lint; run `npm run lint` separately.
+    ignoreDuringBuilds: true,
+  },
   images: {
     // Allow serving local images from the /public directory.
     // Local images (imported or referenced by path) are always allowed;

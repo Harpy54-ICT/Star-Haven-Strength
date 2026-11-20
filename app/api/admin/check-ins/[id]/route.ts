@@ -18,7 +18,7 @@ const replySchema = z.object({
  * Admin only.
  */
 export const PATCH = withAuth(
-  async (req: Request, ctx: { params: { id: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
 
     const parsed = replySchema.safeParse(await req.json().catch(() => null))
@@ -30,7 +30,7 @@ export const PATCH = withAuth(
     }
 
     const checkIn = await db.checkIn.findUnique({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
       select: { id: true, userId: true, weekStart: true },
     })
     if (!checkIn) {

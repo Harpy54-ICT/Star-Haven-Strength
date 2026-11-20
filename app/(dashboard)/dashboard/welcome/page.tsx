@@ -38,12 +38,12 @@ const NEXT_STEPS = [
   },
 ]
 
-export default function WelcomePage({
+export default async function WelcomePage({
   searchParams,
 }: {
-  searchParams: { session_id?: string }
+  searchParams: Promise<{ session_id?: string }>
 }) {
-  const hasSession = !!searchParams?.session_id
+  const hasSession = !!(await searchParams)?.session_id
 
   return (
     <main className="min-h-screen bg-grey-light px-4 py-16">

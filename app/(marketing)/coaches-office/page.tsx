@@ -31,9 +31,9 @@ function formatDate(date: Date | null): string {
 export default async function CoachesOfficePage({
   searchParams,
 }: {
-  searchParams: { type?: string }
+  searchParams: Promise<{ type?: string }>
 }) {
-  const typeParam = searchParams.type
+  const typeParam = (await searchParams).type
   const activeType =
     typeParam && VALID_TYPES.includes(typeParam as CoachPostTypeValue)
       ? (typeParam as CoachPostTypeValue)

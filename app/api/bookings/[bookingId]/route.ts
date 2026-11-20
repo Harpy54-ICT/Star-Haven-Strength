@@ -16,9 +16,9 @@ const patchSchema = z.object({
 })
 
 export const PATCH = withAuth(
-  async (req: Request, ctx: { params: { bookingId: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ bookingId: string }> }) => {
     const booking = await db.booking.findUnique({
-      where: { id: ctx.params.bookingId },
+      where: { id: (await ctx.params).bookingId },
       select: { userId: true },
     })
     if (!booking) {
@@ -32,7 +32,7 @@ export const PATCH = withAuth(
     }
     const { startTime, endTime, ...rest } = parsed.data
     await db.booking.update({
-      where: { id: ctx.params.bookingId },
+      where: { id: (await ctx.params).bookingId },
       data: {
         ...rest,
         ...(startTime ? { startTime: new Date(startTime) } : {}),
@@ -44,9 +44,9 @@ export const PATCH = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { bookingId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ bookingId: string }> }) => {
     const booking = await db.booking.findUnique({
-      where: { id: ctx.params.bookingId },
+      where: { id: (await ctx.params).bookingId },
       select: { userId: true },
     })
     if (!booking) {
@@ -54,7 +54,7 @@ export const DELETE = withAuth(
     }
     await requireOwnership(booking.userId)
     await db.booking.update({
-      where: { id: ctx.params.bookingId },
+      where: { id: (await ctx.params).bookingId },
       data: { status: 'cancelled' },
     })
     return NextResponse.json({ ok: true })

@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db/client'
 import { enforceRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
-const schema = z.object({ email: z.string().email() })
+const schema = z.object({ email: z.email() })
 
 /**
  * Request a password reset.

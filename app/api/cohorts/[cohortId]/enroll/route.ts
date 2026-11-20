@@ -18,10 +18,10 @@ const COHORT_ENROLL_XP = 50
  */
 
 export const POST = withAuth(
-  async (_req: Request, ctx: { params: { cohortId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     const session = await requireAuth()
     const userId = session.user.id
-    const cohortId = ctx.params.cohortId
+    const cohortId = (await ctx.params).cohortId
 
     const cohort = await db.cohortProgram.findUnique({
       where: { id: cohortId },
@@ -65,10 +65,10 @@ export const POST = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { cohortId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     const session = await requireAuth()
     const userId = session.user.id
-    const cohortId = ctx.params.cohortId
+    const cohortId = (await ctx.params).cohortId
 
     const existing = await db.cohortEnrollment.findUnique({
       where: { cohortId_userId: { cohortId, userId } },

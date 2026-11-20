@@ -75,7 +75,7 @@ const shouldSkipValidation =
   process.env.NEXT_PHASE === 'phase-production-build'
 
 function formatErrors(error: z.ZodError): string {
-  return error.errors
+  return error.issues
     .map((e) => `  - ${e.path.join('.')}: ${e.message}`)
     .join('\n')
 }

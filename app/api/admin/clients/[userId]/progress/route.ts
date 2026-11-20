@@ -11,9 +11,9 @@ export const dynamic = 'force-dynamic'
  * by the Progress tab on the admin client profile.
  */
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { userId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ userId: string }> }) => {
     await requireAdmin()
-    const userId = ctx.params.userId
+    const userId = (await ctx.params).userId
 
     const now = Date.now()
     const since90 = new Date(now - 90 * 24 * 60 * 60 * 1000)

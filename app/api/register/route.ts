@@ -15,7 +15,7 @@ const REFERRAL_COOKIE = 'star_haven_referral'
  */
 async function attachReferral(newUserId: string): Promise<void> {
   try {
-    const code = cookies().get(REFERRAL_COOKIE)?.value
+    const code = (await cookies()).get(REFERRAL_COOKIE)?.value
     if (!code) return
 
     const referralCode = await db.referralCode.findUnique({ where: { code } })
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0]?.message ?? 'Invalid input' },
+        { error: parsed.error.issues[0]?.message ?? 'Invalid input' },
         { status: 400 }
       )
     }

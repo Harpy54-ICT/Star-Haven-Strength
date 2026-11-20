@@ -33,7 +33,7 @@ export const POST = withAuth(async (req: Request) => {
   const parsed = bodySchema.safeParse(json)
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.errors[0]?.message ?? 'Invalid request' },
+      { error: parsed.error.issues[0]?.message ?? 'Invalid request' },
       { status: 400 }
     )
   }
@@ -120,7 +120,7 @@ export const POST = withAuth(async (req: Request) => {
   // httpOnly `shs_aff` cookie holds the partner's tracking code. Resolve it to
   // an active partner and carry it through checkout + subscription metadata so
   // the webhook can credit the partner on paid invoices.
-  const affCode = cookies().get('shs_aff')?.value ?? null
+  const affCode = (await cookies()).get('shs_aff')?.value ?? null
   let affiliateMeta: Record<string, string> = {}
   if (affCode) {
     const partner = await db.affiliatePartner.findFirst({

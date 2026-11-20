@@ -16,10 +16,10 @@ function countExercises(exercises: unknown): number {
 export default async function AdminClientProfilePage({
   params,
 }: {
-  params: { userId: string }
+  params: Promise<{ userId: string }>
 }) {
   await requireAdmin()
-  const { userId } = params
+  const { userId } = await params
 
   const user = await db.user.findUnique({
     where: { id: userId },

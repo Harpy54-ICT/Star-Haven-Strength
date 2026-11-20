@@ -16,9 +16,10 @@ async function getPost(slug: string) {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const post = await getPost(params.slug)
+  const { slug } = await params
+  const post = await getPost(slug)
   if (!post) {
     return { title: "Post Not Found | Coach's Office" }
   }
@@ -48,9 +49,10 @@ function formatDate(date: Date | null): string {
 export default async function CoachPostPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const post = await getPost(params.slug)
+  const { slug } = await params
+  const post = await getPost(slug)
   if (!post) notFound()
 
   // Render the body safely as plain-text paragraphs. We never inject raw HTML.

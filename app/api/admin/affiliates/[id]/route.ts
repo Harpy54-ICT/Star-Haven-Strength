@@ -18,10 +18,10 @@ const patchSchema = z.object({
 })
 
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { id: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
     const partner = await db.affiliatePartner.findUnique({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
     })
     if (!partner) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -33,7 +33,7 @@ export const GET = withAuth(
 )
 
 export const PATCH = withAuth(
-  async (req: Request, ctx: { params: { id: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
     const parsed = patchSchema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) {
@@ -41,7 +41,7 @@ export const PATCH = withAuth(
     }
     const d = parsed.data
     await db.affiliatePartner.update({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
       data: {
         ...(d.name !== undefined ? { name: d.name } : {}),
         ...(d.websiteUrl !== undefined
@@ -62,9 +62,9 @@ export const PATCH = withAuth(
 )
 
 export const DELETE = withAuth(
-  async (_req: Request, ctx: { params: { id: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
-    await db.affiliatePartner.delete({ where: { id: ctx.params.id } })
+    await db.affiliatePartner.delete({ where: { id: (await ctx.params).id } })
     return NextResponse.json({ ok: true })
   }
 )

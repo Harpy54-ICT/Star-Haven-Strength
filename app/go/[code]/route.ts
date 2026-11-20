@@ -30,9 +30,9 @@ function safePath(to: string | null): string {
 
 export async function GET(
   req: Request,
-  ctx: { params: { code: string } }
+  ctx: { params: Promise<{ code: string }> }
 ) {
-  const code = ctx.params.code
+  const code = (await ctx.params).code
   const { searchParams, origin } = new URL(req.url)
   const dest = safePath(searchParams.get('to'))
   const res = NextResponse.redirect(new URL(dest, origin))

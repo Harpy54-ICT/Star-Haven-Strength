@@ -5,12 +5,12 @@ import { withAuth } from '@/lib/auth/api-helpers'
 
 /** Member: cohort detail + my enrollment status + current count. */
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { cohortId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     const session = await requireAuth()
     const userId = session.user.id
 
     const cohort = await db.cohortProgram.findUnique({
-      where: { id: ctx.params.cohortId },
+      where: { id: (await ctx.params).cohortId },
       include: {
         _count: { select: { enrollments: true } },
         enrollments: { where: { userId }, select: { status: true } },

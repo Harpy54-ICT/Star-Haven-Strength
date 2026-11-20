@@ -14,7 +14,7 @@ const patchSchema = z.object({
 })
 
 export const PATCH = withAuth(
-  async (req: Request, ctx: { params: { id: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
     await requireAdmin()
     const parsed = patchSchema.safeParse(await req.json().catch(() => null))
     if (!parsed.success) {
@@ -22,7 +22,7 @@ export const PATCH = withAuth(
     }
 
     const payout = await db.payoutRequest.findUnique({
-      where: { id: ctx.params.id },
+      where: { id: (await ctx.params).id },
       select: { id: true, userId: true, amountCents: true, status: true },
     })
     if (!payout) {

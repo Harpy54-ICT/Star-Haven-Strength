@@ -9,10 +9,11 @@ export const dynamic = 'force-dynamic'
 export default async function VideoDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const video = await db.videoLibraryItem.findUnique({
-    where: { id: params.id },
+    where: { id },
   })
 
   if (!video) notFound()

@@ -30,8 +30,8 @@ function currentStreak(days: number[]): number {
 }
 
 export const POST = withAuth(
-  async (_req: Request, ctx: { params: { habitId: string } }) => {
-    const { habitId } = ctx.params
+  async (_req: Request, ctx: { params: Promise<{ habitId: string }> }) => {
+    const { habitId } = await ctx.params
     const habit = await db.habit.findUnique({
       where: { id: habitId },
       select: { userId: true, longestStreak: true },

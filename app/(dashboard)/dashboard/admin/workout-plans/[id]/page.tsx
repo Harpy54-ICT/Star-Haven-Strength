@@ -12,12 +12,13 @@ export const dynamic = 'force-dynamic'
 export default async function EditWorkoutPlanPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   await requireAdmin()
+  const { id } = await params
 
   const plan = await db.workoutPlan.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       user: {
         select: { id: true, firstName: true, lastName: true, email: true },

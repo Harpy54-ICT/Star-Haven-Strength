@@ -22,9 +22,9 @@ async function isMember(cohortId: string, userId: string, role?: string) {
 }
 
 export const GET = withAuth(
-  async (_req: Request, ctx: { params: { cohortId: string } }) => {
+  async (_req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     const session = await requireAuth()
-    const cohortId = ctx.params.cohortId
+    const cohortId = (await ctx.params).cohortId
     if (!(await isMember(cohortId, session.user.id, session.user.role))) {
       return NextResponse.json(
         { error: 'Enroll to view the discussion' },
@@ -44,9 +44,9 @@ export const GET = withAuth(
 )
 
 export const POST = withAuth(
-  async (req: Request, ctx: { params: { cohortId: string } }) => {
+  async (req: Request, ctx: { params: Promise<{ cohortId: string }> }) => {
     const session = await requireAuth()
-    const cohortId = ctx.params.cohortId
+    const cohortId = (await ctx.params).cohortId
     if (!(await isMember(cohortId, session.user.id, session.user.role))) {
       return NextResponse.json(
         { error: 'Enroll to post in the discussion' },
